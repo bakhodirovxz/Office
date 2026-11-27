@@ -67,6 +67,11 @@ pub async fn run(
             .zip(resolved.s.public_url.clone()),
         tls::ConnLimits::from_settings(&resolved),
     );
+    if resolved.plain_http {
+        eprintln!(
+            "{name}: warning: tls = \"none\": plain http. Editor tokens, session tokens and documents cross the network in cleartext; use https (a certificate, or a TLS proxy) in production"
+        );
+    }
     if resolved.upstream_tls {
         eprintln!(
             "{name}: tls = \"upstream\": plain HTTP, answering the trusted proxies only; TLS must end at the proxy"

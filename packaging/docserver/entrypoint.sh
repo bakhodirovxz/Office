@@ -32,14 +32,22 @@ fi
 unset JWT_SECRET
 
 S=${DOCSERVER_SECRETS_DIR:-/run/secrets}
-secret() { # <name>: the file in $S, else one generated once on the data volume
-  if [ -s "$S/$1" ]; then printf %s "$S/$1"; return; fi
-  mkdir -p /data/secrets
-  if [ ! -s "/data/secrets/$1" ]; then
-    head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n' > "/data/secrets/$1"
-    warn "generated $1 in /data/secrets; mount $S with it instead (the audit key belongs outside the data volume)"
-  fi
-  printf %s "/data/secrets/$1"
+V=/data/secrets
+# secret <name> [dir]: the file in $S, else one an earlier start generated in $V, else a new one in dir (none without dir). Run it
+# as `X=$(secret ...)` in this shell: its die then stops the script (gate review L5: a failed write said "generated" and went on).
+secret() {
+  local f
+  for f in "$S/$1" "$V/$1"; do
+    if [ -s "$f" ]; then
+      [ "$f" = "$S/$1" ] || warn "$1 is on the data volume ($V); mount $S with it instead (a copy of the volume holds it)"
+      printf %s "$f"; return
+    fi
+  done
+  [ -n "${2:-}" ] || return 0
+  mkdir -p "$2" || die "cannot store a generated $1 in $2; mount $S/$1 (DOCSERVER_SECRETS_DIR) or a volume writable by uid 10002 on /data"
+  head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n' > "$2/$1" || die "cannot write $2/$1"
+  [ "$2" != "$V" ] || warn "generated $1 in $V on the data volume; mount $S with it instead (a copy of the volume holds it)"
+  printf %s "$2/$1"
 }
 # TOML string and list of strings from a value / a comma list; a quote, backslash or control character is refused, not escaped
 q() {
@@ -64,15 +72,21 @@ for v in DOCSERVER_PUBLIC_PORT DOCSERVER_INTERNAL_PORT DOCSERVER_MAX_DOCUMENT_MB
   case "${!v:-1}" in *[!0-9]*) die "$v must be a number" ;; esac
 done
 for v in DOCSERVER_PUBLIC_URL DOCSERVER_FETCH_ALLOW DOCSERVER_INTERNAL_URL DOCSERVER_INTERNAL_ALLOW; do need "$v"; done
-# TLS: the server's own (a certificate and key given as files) or a trusted proxy's (the drop-in); one of the two is required
-if [ -n "${DOCSERVER_TLS_CERT:-}" ]; then
+# Plain http, as ONLYOFFICE Document Server by default (owner decision 2026-11-27): an http:// public URL and no certificate. The server
+# prints the cleartext warning. DOCSERVER_TRUSTED_PROXIES is optional here: only a listed (plain-http) proxy may set X-Forwarded-For.
+# With an https:// public URL, TLS is the server's own (a certificate and key given as files) or a trusted proxy's (the drop-in).
+if [ "${DOCSERVER_PUBLIC_URL#http://}" != "$DOCSERVER_PUBLIC_URL" ]; then
+  [ -z "${DOCSERVER_TLS_CERT:-}${DOCSERVER_TLS_KEY:-}" ] || die "DOCSERVER_PUBLIC_URL is http:// but DOCSERVER_TLS_CERT/DOCSERVER_TLS_KEY are set: use an https:// public URL with the certificate, or leave the certificate out for plain http"
+  TLS="tls = \"none\"${DOCSERVER_TRUSTED_PROXIES:+
+trusted_proxies = $(list "$DOCSERVER_TRUSTED_PROXIES")}"
+elif [ -n "${DOCSERVER_TLS_CERT:-}" ]; then
   need DOCSERVER_TLS_KEY
   [ -r "$DOCSERVER_TLS_CERT" ] && [ -r "$DOCSERVER_TLS_KEY" ] || die "DOCSERVER_TLS_CERT / DOCSERVER_TLS_KEY: cannot read the files (they must be readable by uid 10002)"
   TLS="tls = \"builtin\"
 tls_cert = $(q "$DOCSERVER_TLS_CERT")
 tls_key = $(q "$DOCSERVER_TLS_KEY")"
 else
-  [ -n "${DOCSERVER_TRUSTED_PROXIES:-}" ] || die "TLS is required: set DOCSERVER_TLS_CERT and DOCSERVER_TLS_KEY (the server's own), or DOCSERVER_TRUSTED_PROXIES (TLS ends at a proxy)"
+  [ -n "${DOCSERVER_TRUSTED_PROXIES:-}" ] || die "DOCSERVER_PUBLIC_URL is not http://, so TLS is required: set DOCSERVER_TLS_CERT and DOCSERVER_TLS_KEY (the server's own), or DOCSERVER_TRUSTED_PROXIES (TLS ends at a proxy); for plain http use an http:// DOCSERVER_PUBLIC_URL"
   # without a certificate of its own, TLS must end at a proxy that is listed here
   TLS="tls = \"upstream\"
 trusted_proxies = $(list "$DOCSERVER_TRUSTED_PROXIES")"
@@ -90,18 +104,26 @@ P=${DOCSERVER_PROVIDER:-docsapi}
 # PUBLIC_PORT = INTERNAL_PORT is the shared layout (dropin.md D2b): one listener, its saved-file route for INTERNAL_ALLOW only
 [ "${DOCSERVER_PUBLIC_PORT:-8787}" != "${DOCSERVER_INTERNAL_PORT:-80}" ] || echo "entrypoint: shared layout: port ${DOCSERVER_PUBLIC_PORT:-8787} serves both sides" >&2
 
+# Gate review L3: only the server secret is generated on the data volume (the history chain and open sessions need it across
+# restarts). The converter's secret is used by nobody outside and is made anew in the tmpfs each start. The audit key is never
+# generated: next to the log it would protect nothing; without a mounted one the chain is unkeyed and the server says so.
+SS=$(secret server-secret "$V")
+CS=$(secret converter-secret "$R")
+AK=$(secret audit-key)
+[ -n "$AK" ] || warn "no $S/audit-key: the audit log's chain is not keyed; mount one (outside the data volume) to key it"
+
 cat > "$R/api.toml" <<EOF
 listen = "0.0.0.0:${DOCSERVER_PUBLIC_PORT:-8787}"
 auth = "jwt"
-secret_file = $(q "$(secret converter-secret)")
+secret_file = $(q "$CS")
 $TLS
 public_url = $(q "$PUB")
 work_dir = "/tmp/work"
 store_dir = "/data/store"
 
 [docserver]
-server_secret_file = $(q "$(secret server-secret)")
-audit_key_file = $(q "$(secret audit-key)")
+server_secret_file = $(q "$SS")
+$([ -z "$AK" ] || echo "audit_key_file = $(q "$AK")")
 data_dir = "/data/docserver"
 diff_bin_dir = "/app/diff"
 internal_listen = $(q "0.0.0.0:${DOCSERVER_INTERNAL_PORT:-80}")

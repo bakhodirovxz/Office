@@ -606,7 +606,7 @@ test('History panel: list after two saves, name, restore, download, Esc; compare
   await again.ctx.close();
 });
 
-test('History panel: download:false shows no download or compare controls; a view session shows no restore or name', async () => {
+test('History panel: download:false shows no download or compare controls; a view session shows no History button', async () => {
   const a = await open();
   const w = await twoSaves(a.page, '&download=0');
   await w.getByRole('button', { name: 'History', exact: true }).click();
@@ -620,16 +620,13 @@ test('History panel: download:false shows no download or compare controls; a vie
   expect(a.problems).toEqual([]);
   await a.ctx.close();
 
-  // a view session (edit:false): download and compare stay, restore and name go. (The server refuses the routes too: tests/history.rs.)
+  // a view session (edit:false): no History at all unless the provider has `view_history = true` (gate review L4; the server refuses
+  // the routes too: tests/history.rs `a_view_session_sees_no_history_unless_the_provider_allows_it`)
   const b = await open();
   await b.page.goto(`${HOST}/host?kind=files&id=1&mode=view&lang=en`);
   await expect.poll(() => state(b.page), { timeout: 90_000 }).toBe('ready');
   const wv = wrapperOf(b.page);
-  await wv.getByRole('button', { name: 'History', exact: true }).click();
-  await expect.poll(() => wv.locator('#hist-vers > li').count()).toBeGreaterThanOrEqual(1);
-  await expect(wv.getByRole('button', { name: /^Restore/ })).toHaveCount(0);
-  await expect(wv.getByRole('button', { name: /^Name/ })).toHaveCount(0);
-  await expect(wv.getByRole('button', { name: /^Save a copy/ }).first()).toBeVisible();
+  await expect(wv.locator('#hist-open')).toHaveCount(0);
   expect(b.problems).toEqual([]);
   await b.ctx.close();
 });

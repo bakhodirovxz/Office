@@ -71,7 +71,11 @@ fn setup_docserver(path: &str) -> Result<Option<Mounted>, String> {
     let Some(t) = s.docserver.clone() else {
         return Ok(None);
     };
-    let ds = Arc::new(Docserver::from_table(t, s.listen.parse().ok())?);
+    let ds = Arc::new(Docserver::from_server_table(
+        t,
+        s.listen.parse().ok(),
+        s.tls == "none",
+    )?);
     suite_serve::check_secrets_distinct(&s, &ds)?;
     // bound and handed to the runtime here, so a failure on either step stops the start
     let l = ds

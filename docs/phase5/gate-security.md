@@ -111,25 +111,87 @@ Severity is for a generic install: the image behind a TLS proxy, one or more pro
 - Fix: `restore` calls `editable` after the permission check (`history.rs`, one line). Test: `docserver/tests/history.rs:207`
   `restore_waits_for_the_providers_document_like_a_save` (restore 409 `no_document`, the following save 409, no version stored).
 
-### Low (not fixed; each is a recommendation)
+### Low (all fixed 2026-11-27, branch `p5-lows` from phase-5 42cadb0e; owner: "Hozir tuzataver")
 
-- **L1. An authenticated edit session can fill the disk.** No cap on versions per session and no free-space floor in `put_version`
-  (`sessions.rs`); each save is up to `max_document_mb` and is also copied into the history store. Needs a valid edit session (an
-  employee, or a leaked config token whose `document.url` still works). Verified by reading only. Suggestion: a free-space floor (the
-  converter has one) and a per-session version cap.
-- **L2. `trusted_proxies` accepts `0.0.0.0/0` and `::/0`** (`convert-api/src/config.rs` `Cidr::parse`; `internal_allow` refuses a /0).
-  An operator who writes it turns the "proxy only" rule off and lets any client choose its rate-limit bucket by `X-Forwarded-For`.
-  Verified by reading. Suggestion: refuse a /0 as `internal_allow` does.
-- **L3. Env mode keeps generated secrets on the data volume.** With no `/run/secrets` mount the entrypoint writes `server-secret`,
-  `converter-secret` and `audit-key` to `/data/secrets` (warned at start; verified in Docker). A copy of the volume then holds the key of
-  the session and file tokens, and the audit key sits next to the log it protects. The installer always mounts them; a hand `docker
-  run` does not. For the quick-start doc: mount `/run/secrets`.
-- **L4. F5 (rehearsal) is still open:** every session of one provider and `document.key`, view-only included, lists and downloads every
-  past version of that key. With per-open keys (the HRM) nothing crosses; an integrator with stable keys exposes old versions across
-  users. ONLYOFFICE co-editors of one key see each other's live edits, so the exposure is close to that level.
-- **L5. `entrypoint.sh` says "generated" when it could not write** (`/data` read-only, no volume): `secret()` runs inside `$(...)`, so
-  its `mkdir` failure does not stop the script. The start still fails closed ("cannot read /data/secrets/server-secret"), verified in
-  Docker. Cosmetic.
+Paths under `services/` unless they start with `packaging/`. The original finding is kept in each item, then the fix.
+
+- **L1. An authenticated edit session could fill the disk (fixed).** There was no cap on versions per session and no free-space floor in
+  `put_version` (`sessions.rs`); each save is up to `max_document_mb` and is also copied into the history store. Needed a valid edit
+  session (an employee, or a leaked config token whose `document.url` still works). Verified by reading.
+  - Fix: `Docserver::room` (`docserver/src/sessions.rs:433`), called by `put_version` (`:421`; save, restore, the first fetch) and
+    `put_autosave` (`:512`), and by the restore route before it touches the history (`docserver/src/history.rs:265`). A refusal is
+    507 with `disk_low` (the volume of `data_dir` would keep less than `min_free_mb` free after the write; the converter's
+    `free_space` reused, `convert-api/src/app.rs:377`) or `version_limit` (the session already stores `max_versions_per_session`).
+    Nothing is written: the versions, the history and the autosave stay as they were, and the wrapper keeps the document dirty with
+    "the document could not be saved" (the existing failed-save path). The close's promotion of the recovery copy is not checked (one
+    per session; refusing it would lose the last edits), so a session at its cap still reaches the provider with status 2.
+  - Defaults (`[docserver]`, `docserver/src/config.rs:114`, `:117`, checks at `:393`): `min_free_mb = 1024` (0 turns it off; a docserver
+    write is at most `max_document_mb`, unlike the converter's batches, whose floor is 2048 plus the batch), `max_versions_per_session =
+    500` (a save every 90 s for the whole 12 h session life). TOML only, no env knob.
+  - Tests: `docserver/tests/history.rs:712` `a_session_past_its_version_cap_refuses_saves_and_keeps_what_it_has` (cap 3: the fourth
+    save and a restore 507, three versions and three history entries kept, autosave + close still makes version 4 with status 2);
+    `history.rs:756` `under_the_disk_floor_saves_are_refused_and_stored_versions_stay` (floor 1 TiB: save, autosave, restore and the
+    first version of a new session refused, stored versions readable). Both fail with `room` disabled.
+- **L2. `trusted_proxies` accepted `0.0.0.0/0` and `::/0` (fixed, 42cadb0e).** `convert-api/src/config.rs` `Cidr::parse` took a /0
+  (`internal_allow` already refused one): an operator who wrote it turned the "proxy only" rule off and let any client choose its
+  rate-limit bucket by `X-Forwarded-For`. Now refused with "is a /0 range"; test `convert-api/src/config.rs:719` in `local_mode_takes_no_public_url_and_server_mode_needs_a_good_one` (`0.0.0.0/0`, `::/0`).
+- **L3. Env mode kept generated secrets on the data volume (fixed).** With no `/run/secrets` mount the entrypoint wrote `server-secret`,
+  `converter-secret` and `audit-key` to `/data/secrets`: a copy of the volume held the key of the session and file tokens, and the
+  audit key sat next to the log it protects. The installer always mounts them; a hand `docker run` did not.
+  - Fix, the smallest that keeps a plain `docker run` working (`packaging/docserver/entrypoint.sh:38-51`, `:104-107`):
+    - the README quick start, its compose example and `rehearse-generic.sh` mount `server-secret` and `audit-key` in `/run/secrets`
+      (`packaging/docserver/README.md` "Quick start"), so the documented path puts no key on the volume;
+    - `audit-key` is never generated: beside the log it protects nothing (whoever can rewrite the log can read the key), so without a
+      mounted one the chain is unkeyed and both the entrypoint and the server say so;
+    - `converter-secret` (it only verifies tokens of the converter API, which nobody outside holds in env mode) is made anew in the
+      `/tmp` tmpfs on every start;
+    - `server-secret` alone is still generated into `/data/secrets` when not mounted: the history chain key and open sessions depend
+      on it across restarts, and a plain run has no other persistent place. Warned on every start that uses it.
+    - A key an earlier start left in `/data/secrets` is still used (an existing keyed audit log keeps verifying), with the same warning.
+  - Rejected: refusing to start without `/run/secrets` (breaks the one-line trial and every existing env install); deriving the server
+    secret from `JWT_SECRET` (the integrator could then mint our session tokens and rewrite the history chain).
+  - Verified in Docker on `hoshiya-docserver:p5-lows` (below, "Low fixes in Docker").
+- **L4. F5 (rehearsal): every session of a key, view-only included, listed and downloaded every past version (fixed).** With per-open
+  keys (the HRM) nothing crosses; an integrator with stable keys exposed old versions across users.
+  - Decision: the history routes (list, download, compare) need an edit session, or `view_history = true` in the provider entry
+    (`docserver/src/history.rs:215` `history_allowed`; refusal 403 and a `perm.refused` line with `"perm": "history"`; restore and name
+    already needed edit). The session answer carries `history` (`docserver/src/api.rs:186`) and the wrapper draws the History button only
+    then (`docserver/static/editor.js:334`). Default `view_history = false` (`docserver/src/config.rs:57`); TOML only.
+  - Why this shape: a DocsAPI document server hands out no history of its own; the host supplies it (`onRequestHistory`,
+    `refreshHistory`). A host written for it expects a viewer to see none unless the host offers it. The DocsAPI has no signed field
+    for that offer (the history events are functions in the host page, not in the token), and a field of our own would need integrator
+    code changes, against the drop-in rule (owner, 2026-11-07); so the signal is the operator's provider setting. Edit sessions keep
+    the history: co-editors of one key already see each other's live edits, and a DocsAPI host changes the key after each status 2, so
+    a key's versions are that editing period's. Left: an edit user of a stable key that is never rotated sees versions saved by
+    earlier editors of the same key.
+  - Tests: `docserver/tests/history.rs:613` `a_view_session_sees_no_history_unless_the_provider_allows_it` (view session: list,
+    download and compare 403, three audit lines, `history: false` in the session answer; the edit session of the same key 200; after a
+    restart with `view_history = true` the view session lists and downloads, restore still 403);
+    `history_routes_check_the_session_token_and_permissions` now expects 403 for the view session's list. Both fail with
+    `history_allowed` forced true. `ci/web-smoke/docserver.spec.ts` "History panel: ... a view session shows no History button"
+    updated (not run here). HRM profile: per-open keys, edit sessions unchanged; the generic host flow passed 8 of 8 (below).
+- **L5. `entrypoint.sh` said "generated" when it could not write (fixed).** `secret()` ran inside `$(...)` in the config heredoc,
+  where `set -e` does not apply, so its `mkdir` failure did not stop the script (the start still failed closed later, "cannot read
+  /data/secrets/server-secret"). Now the secrets are resolved in the main shell before the heredoc (`entrypoint.sh:104-106`) and
+  `secret()` dies with the reason (`:47-48`), exit 64.
+
+#### Low fixes in Docker (2026-11-27)
+
+Image `hoshiya-docserver:p5-lows` built by `packaging/docserver/build.sh` (`TAG=p5-lows`, the fake-HRM image not rebuilt), local Docker
+only; the secret value is never printed.
+
+| Probe | Result |
+|---|---|
+| `--read-only`, no volume, no `/run/secrets` (L5) | `mkdir: cannot create directory '/data/secrets': Read-only file system`, then `entrypoint: cannot store a generated server-secret in /data/secrets; mount /run/secrets/server-secret ... or a volume writable by uid 10002 on /data`; exit 64. No "generated" line |
+| No volume, writable `/data`, no `/run/secrets` (L3) | starts; `/data/secrets` holds `server-secret` only (warned); `converter-secret` in `/tmp/docserver`; no `audit_key_file` in the config, the entrypoint and the server warn that the chain is unkeyed |
+| README quick start: volume plus `server-secret` and `audit-key` in `/run/secrets`, `--read-only` (L3) | running; `/data` holds `docserver` and `store`, no `secrets`; the config reads both keys from `/run/secrets`; no key warning |
+| A volume with an `audit-key` an earlier start generated (upgrade) | kept (`audit_key_file = "/data/secrets/audit-key"`), warned "is on the data volume" |
+| `--read-only`, no volume, `server-secret` mounted | the secret is found; the start fails on the server's own `cannot create /data/docserver: Read-only file system`, exit 2 |
+| `rehearse-generic.sh` (`IMAGE=hoshiya-docserver:p5-lows`; the quick start now mounts the two keys) | **8 of 8** passed (2.0 min), healthy, log hygiene 0 tokens |
+
+Tests (`services/`, `--no-fail-fast`): `convert-api` 78 passed; `docserver` 88 passed (85 + 3 new); `cargo fmt --check` and
+`cargo clippy -p docserver -p convert-api --tests -- -D warnings` clean. The first full run had one failure, `no_hrm_names_in_code` (a
+new comment named the other document server); reworded before the commit, passes.
 
 ### Checked, no finding (this run)
 
@@ -192,6 +254,68 @@ Verified 2026-11-25 on branch `p5-verify` (= phase-5 9af9a861: G1-G3, S21/S22 an
 - Not run: the "TLS certificate and no proxy keeps the per-address cap" check (section 5), Traefik rows, compose/drop-in rehearsals.
   The `--read-only` refusal prints shell errors before the server's own message; it still fails closed (exit 2).
 
+### Plain http mode (owner decision 2026-11-27)
+
+The owner overruled the "https mandatory" recommendation (gate-review §9 row 2, §10): the server also runs on plain http, the way
+ONLYOFFICE Document Server listens by default. Branch `p5-http` (from phase-5 42cadb0e, phase-5 e9cfa95d merged in), image
+`hoshiya-docserver:p5-http`. Local Docker and this PC only.
+
+**What changes.** An `http://` `DOCSERVER_PUBLIC_URL` with no certificate makes the entrypoint write `tls = "none"`
+(`packaging/docserver/entrypoint.sh`); `convert-api` accepts `tls = "none"` only in server mode, with an `http://` `public_url`,
+and without `tls_cert`, `tls_key` or `redirect_listen` (`services/convert-api/src/config.rs` `resolve`). In that mode: no HSTS, no
+redirect, no "answer the proxy only" rule; `X-Forwarded-For`/`-Proto` count only from `trusted_proxies`, which is optional here (a
+plain-http proxy), as in the other modes; the container's loopback `/healthz` probe is answered whatever its `Host` (as with
+`tls = "upstream"`); `frame_origins` may list `http://` origins (`services/docserver/src/config.rs`, `from_server_table`). A warning
+at every start names the cleartext exposure. Every https path is unchanged: an `https://` URL still needs a certificate or a proxy,
+and an `http://` frame origin on an https server is still refused unless it is localhost.
+
+**Accept / refuse**, probed on the image (`docker run`, `--read-only`, tmpfs `/data`):
+
+| Settings | Result |
+|---|---|
+| `http://` URL, nothing else | starts, `tls = "none"`, "listening on http://", the cleartext warning |
+| `http://` URL + `DOCSERVER_TRUSTED_PROXIES=nginx,10.0.0.0/8` | starts, `tls = "none"` with `trusted_proxies` |
+| `https://` URL + `DOCSERVER_TRUSTED_PROXIES` | starts, `tls = "upstream"` (unchanged) |
+| `http://` URL + `DOCSERVER_TLS_CERT`/`_KEY` (either one) | exit 64, "DOCSERVER_PUBLIC_URL is http:// but DOCSERVER_TLS_CERT/DOCSERVER_TLS_KEY are set" |
+| `https://` (or `ftp://`) URL, no certificate, no proxy | exit 64, "DOCSERVER_PUBLIC_URL is not http://, so TLS is required ... for plain http use an http:// DOCSERVER_PUBLIC_URL" |
+| `http://` URL with a path | exit 2, refused as not an origin |
+| `https://` server, `http://app.example` frame origin | exit 2, "is plain http; use https (http is accepted for localhost only, or on a plain-http server: tls = \"none\")" |
+
+Unit tests: `convert-api/src/config.rs` `local_mode_takes_no_public_url_and_server_mode_needs_a_good_one` (the combinations above
+plus `tls = "none"` in local mode and an `http://` URL under `tls = "builtin"`/`"upstream"`), `convert-api/tests/hardening.rs`
+`tls_none_serves_plain_http_to_everyone_without_hsts_or_redirect_and_trusts_no_forwarded_headers`, `docserver/src/config.rs`
+`frame_origins_are_origins_only`.
+
+**Criterion (1) over plain http.** `SCHEME=http rehearse-generic.sh` on the merged image: **8 of 8** (docx, xlsx, pptx, pdf: open ->
+edit -> save -> reopen -> download, callbacks 1,6,2 each, plus view-only), log hygiene 0 tokens. The browser reaches both sides by
+names that are not localhost (`ds.hoshiya.test`, `app.hoshiya.test`, mapped inside Chromium), and the test asserts
+`isSecureContext === false` in the editor frame, so this is the real cross-site, insecure-context case. The editor needs no cookie
+(the session token lives in `editor.js` memory, `credentials: 'omit'`), so `SameSite`/`Secure` never comes into it. The https run
+(`SCHEME=https`, same image) stays **8 of 8**, with `strict-transport-security: max-age=31536000` on its answers; the http run's
+answers carry none.
+
+**Measured limit.** Copy from an editor to the system clipboard fails over plain http: eframe logs "Clipboard is not available
+because we are not in a secure context" (eframe 0.36.2 `src/web/mod.rs:201-209`; seen in the http run, not in the https run). Paste
+uses the browser's paste event (`src/web/events.rs:339`, no secure context needed; read, not measured). WebGPU is dropped outside a
+secure context and the editors use WebGL (`egui-wgpu` `setup.rs:109`).
+
+**S-items that behave differently over plain http** (the rest are unchanged: their checks do not depend on the transport):
+
+| # | Over plain http |
+|---|---|
+| S19 | Does not apply: no TLS, no HSTS, no redirect, no proxy-only rule. `X-Forwarded-*` still trusted only from `trusted_proxies` |
+| S1, S11, S24 | The checks are the same, but config, session and file tokens are readable on the wire: a passive listener can use a session token for the session's life (12 h cap) and a file token for its 10 min |
+| S3 | A sniffed config token without `exp` (`compat = "docsapi"`) can be replayed; G3's fetch-before-change still needs its `document.url` to work |
+| S13 | `frame-ancestors` may list `http://` origins; an active attacker on the path can rewrite those host pages |
+| S14 | The origin and window checks hold, but `api.js`, `editor.js` and the editors arrive without integrity: an active attacker on the path can replace them |
+| S17 | Unchanged in our logs; tokens can still land in the logs of any plain-http proxy in front |
+
+**Residual risk.** Plain http is safe only on a network where nobody untrusted can read or change traffic between the browsers, the
+host application and this server. On any other network a passive listener reads documents and tokens, and an active one takes over
+sessions or serves its own editor code. That is ONLYOFFICE's position with its http default; the README says it right after the
+quick start, and https (own certificate or a TLS proxy) stays the production recommendation. Not measured: a real plain-http proxy in
+front (nginx with `DOCSERVER_TRUSTED_PROXIES`), Firefox and Safari (Chromium only), a real paste over http.
+
 ## 5. Not run, and why
 
 - The compose rehearsal (`packaging/docserver/rehearse.sh`, `docserver-compose.spec.ts`) and `rehearse-dropin.sh`: not run; the real
@@ -208,9 +332,9 @@ Verified 2026-11-25 on branch `p5-verify` (= phase-5 9af9a861: G1-G3, S21/S22 an
 
 ## 6. For the owner
 
-- Nothing needs a decision to pass this part of the gate. Recommended next (low): L1 (disk floor and version cap), L2 (refuse a /0
-  `trusted_proxies`), and in the quick-start doc a `/run/secrets` mount (L3).
-- `entrypoint.sh` and `install.sh` were not changed.
+- Nothing needs a decision to pass this part of the gate. The five low findings are fixed (2026-11-27, section 3 "Low"). L4 is a
+  decision recorded there: history for edit sessions only, view sessions when the provider says `view_history = true`.
+- `entrypoint.sh` and `install.sh` were not changed on the gate branch; the L3/L5 fixes (2026-11-27) changed `entrypoint.sh`, `install.sh` still not (it always mounted the keys).
 - The `cookie` bump should go to phase-4 too (the same lock entry), then merge forward as usual.
 
 ## 7. Commits

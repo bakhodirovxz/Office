@@ -40,6 +40,7 @@ impl From<SessErr> for ApiError {
                 ApiError::new(StatusCode::UNSUPPORTED_MEDIA_TYPE, "bad_document", m)
             }
             SessErr::Upstream(m) => ApiError::new(StatusCode::BAD_GATEWAY, "fetch_failed", m),
+            SessErr::NoRoom(code, m) => ApiError::new(StatusCode::INSUFFICIENT_STORAGE, code, m),
             SessErr::Io(m) => ApiError::internal(m),
         }
     }
@@ -181,10 +182,12 @@ async fn create(State(ds): Ds, cl: Cl, body: Bytes) -> Res {
     );
     // the provider's `ui_lang`, when set, is the editors' language whatever `editorConfig.lang` says
     let lang = ds.provider(&rec.provider).and_then(|p| p.ui_lang.clone());
+    // `history`: whether the wrapper offers the History panel (the routes refuse it otherwise, history.rs `history_allowed`)
+    let history = crate::history::history_allowed(&ds, &rec);
     json_ok(
         json!({"sid": rec.sid, "token": token, "editor": rec.editor, "mode": rec.mode,
                    "perms": rec.perms, "title": rec.title, "expires": rec.expires, "lang": lang,
-                   "plugins": ds.plugin_descriptors(&rec)}),
+                   "plugins": ds.plugin_descriptors(&rec), "history": history}),
     )
 }
 

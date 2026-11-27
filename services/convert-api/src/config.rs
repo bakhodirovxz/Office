@@ -1,6 +1,6 @@
 //! The server configuration (a TOML file, `convert-api --config FILE`) and the checks that make a bad combination a refusal to
 //! start (PLAN 5.5): `auth = "none"` only on a loopback address, `auth = "jwt"` only with TLS (built in, or terminated by a
-//! trusted proxy), a secret and a public URL.
+//! trusted proxy) or with plain http asked for by name (`tls = "none"`, an `http://` public URL), a secret and a public URL.
 use serde::Deserialize;
 use std::net::{IpAddr, SocketAddr};
 use std::path::{Path, PathBuf};
@@ -51,14 +51,17 @@ pub struct Settings {
     pub tls_cert: Option<PathBuf>,
     pub tls_key: Option<PathBuf>,
     /// `"builtin"` (default): this server speaks TLS itself. `"upstream"`: a trusted proxy terminates TLS and talks plain HTTP to
-    /// this server; needs a non-empty `trusted_proxies`, and the server then answers only that proxy.
+    /// this server; needs a non-empty `trusted_proxies`, and the server then answers only that proxy. `"none"`: plain http, the
+    /// way the common document servers listen by default (owner decision 2026-11-27); needs an `http://` `public_url`, sends no HSTS,
+    /// and trusts `X-Forwarded-*` only from `trusted_proxies` (optional here) like the other modes.
     pub tls: String,
     /// IPs, CIDRs or container names (`NameSet`) of reverse proxies. Only a peer in this list may set `X-Forwarded-For` and `X-Forwarded-Proto`; for every other
     /// peer the headers are ignored. Empty by default.
     pub trusted_proxies: Vec<String>,
     /// server mode with `tls = "builtin"`: a plain-HTTP listener that only redirects to `public_url`
     pub redirect_listen: Option<String>,
-    /// `https://host[:port]` the clients use (no path); the redirect target and the allowed `Host`. Required in server mode.
+    /// `https://host[:port]` the clients use (no path; `http://` with `tls = "none"`); the redirect target and the allowed `Host`.
+    /// Required in server mode.
     pub public_url: Option<String>,
     /// scratch for the tools. Dedicated to this server: stale entries are swept at start. Server mode: put it on a RAM disk.
     pub work_dir: Option<PathBuf>,
@@ -284,6 +287,8 @@ pub struct Resolved {
     pub trusted_names: NameSet,
     /// `tls = "upstream"`: TLS ends at a trusted proxy
     pub upstream_tls: bool,
+    /// `tls = "none"`: plain http on purpose (server mode only)
+    pub plain_http: bool,
     pub xdfu: convert::xdfu::Mode,
 }
 
@@ -337,15 +342,24 @@ fn read_key(path: &Path) -> Result<[u8; 32], String> {
     Ok(key.try_into().expect("32 bytes"))
 }
 
-/// `https://host[:port]`, nothing else: no path, query, fragment or user info.
-fn check_public_url(u: &str) -> Result<(), String> {
+/// `<scheme>://host[:port]`, nothing else: no path, query, fragment or user info.
+fn check_public_url(u: &str, scheme: &str) -> Result<(), String> {
     let bad = || {
+        let hint = match scheme {
+            "https" if u.starts_with("http://") => {
+                "; for a plain-http server set tls = \"none\" (DOCSERVER_PUBLIC_URL=http://... without a certificate)"
+            }
+            "http" if u.starts_with("https://") => {
+                "; tls = \"none\" is plain http: give a certificate (tls = \"builtin\") or a proxy (tls = \"upstream\") for https"
+            }
+            _ => "",
+        };
         format!(
-            "public_url = \"{u}\" must look like https://host[:port] (no path, query or user info)"
+            "public_url = \"{u}\" must look like {scheme}://host[:port] (no path, query or user info){hint}"
         )
     };
     let rest = u
-        .strip_prefix("https://")
+        .strip_prefix(&format!("{scheme}://"))
         .ok_or_else(bad)?
         .trim_end_matches('/');
     if rest.is_empty() || rest.contains(['/', '@', '?', '#', ' ', '\\']) || rest.starts_with(':') {
@@ -413,13 +427,14 @@ impl Settings {
             })
             .collect::<Result<Vec<_>, _>>()?;
         let trusted_names = NameSet::start(names.into_iter().cloned().collect());
-        if !matches!(self.tls.as_str(), "builtin" | "upstream") {
+        if !matches!(self.tls.as_str(), "builtin" | "upstream" | "none") {
             return Err(format!(
-                "tls = \"{}\": expected \"builtin\" or \"upstream\"",
+                "tls = \"{}\": expected \"builtin\", \"upstream\" or \"none\"",
                 self.tls
             ));
         }
         let upstream_tls = self.tls == "upstream";
+        let plain_http = self.tls == "none";
         let iss = self.provider_issuer()?;
         let auth = match self.auth.as_str() {
             "none" => {
@@ -437,8 +452,8 @@ impl Settings {
                 if self.public_url.is_some() {
                     return Err("public_url belongs to server mode (auth = \"jwt\"); local mode serves the loopback names only".into());
                 }
-                if upstream_tls || !self.trusted_proxies.is_empty() {
-                    return Err("tls = \"upstream\" and trusted_proxies belong to server mode (auth = \"jwt\")".into());
+                if upstream_tls || plain_http || !self.trusted_proxies.is_empty() {
+                    return Err("tls = \"upstream\" or \"none\" and trusted_proxies belong to server mode (auth = \"jwt\")".into());
                 }
                 Auth::None
             }
@@ -455,8 +470,16 @@ impl Settings {
                 let url = self.public_url.as_deref().ok_or(
                     "auth = \"jwt\" needs public_url (the Host check and the redirect target)",
                 )?;
-                check_public_url(url)?;
-                if upstream_tls {
+                check_public_url(url, if plain_http { "http" } else { "https" })?;
+                if plain_http {
+                    // trusted_proxies stays optional: a plain-http proxy may name the client in X-Forwarded-For
+                    if self.tls_cert.is_some()
+                        || self.tls_key.is_some()
+                        || self.redirect_listen.is_some()
+                    {
+                        return Err("tls = \"none\" is plain http: tls_cert, tls_key and redirect_listen belong to tls = \"builtin\"".into());
+                    }
+                } else if upstream_tls {
                     if self.trusted_proxies.is_empty() {
                         return Err("tls = \"upstream\" needs trusted_proxies: only a listed proxy may speak for TLS".into());
                     }
@@ -538,6 +561,7 @@ impl Settings {
             trusted,
             trusted_names,
             upstream_tls,
+            plain_http,
             xdfu,
             s: self,
         })
@@ -756,6 +780,74 @@ kind = \"{kind}\"
                 .unwrap()
                 .contains("builtin")
         );
+        // plain http (owner decision 2026-11-27): an http public URL, no certificate, no redirect listener; proxies optional
+        let plain = |s: &mut Settings| {
+            s.tls = "none".into();
+            s.tls_cert = None;
+            s.tls_key = None;
+            s.public_url = Some("http://docs.example:8080".into());
+        };
+        assert!(server(&plain).is_none());
+        assert!(
+            server(&|s| {
+                plain(s);
+                s.trusted_proxies = vec!["nginx".into(), "10.0.0.0/8".into()];
+            })
+            .is_none()
+        );
+        for what in ["tls_cert", "tls_key", "redirect_listen"] {
+            let e = server(&|s| {
+                plain(s);
+                match what {
+                    "tls_cert" => s.tls_cert = Some("c.pem".into()),
+                    "tls_key" => s.tls_key = Some("k.pem".into()),
+                    _ => s.redirect_listen = Some("0.0.0.0:80".into()),
+                }
+            })
+            .unwrap();
+            assert!(e.contains("tls = \"none\""), "{what}: {e}");
+        }
+        for bad in [
+            "https://docs.example",
+            "http://docs.example/app",
+            "http://u@docs.example",
+            "docs.example",
+        ] {
+            let e = server(&|s| {
+                plain(s);
+                s.public_url = Some(bad.into());
+            })
+            .unwrap();
+            assert!(e.contains("http://host[:port]"), "{bad}: {e}");
+        }
+        assert!(
+            server(&|s| {
+                plain(s);
+                s.public_url = Some("https://docs.example".into());
+            })
+            .unwrap()
+            .contains("tls = \"builtin\"")
+        );
+        // an http public URL in a TLS mode is still refused, and says how to ask for plain http
+        let e = server(&|s| s.public_url = Some("http://x.test".into())).unwrap();
+        assert!(e.contains("tls = \"none\""), "{e}");
+        assert!(
+            server(&|s| {
+                up(s);
+                s.public_url = Some("http://x.test".into());
+            })
+            .unwrap()
+            .contains("https://host")
+        );
+        // local mode is plain http already: tls = "none" there is a mistake
+        let e = Settings {
+            tls: "none".into(),
+            ..Settings::default()
+        }
+        .resolve()
+        .err()
+        .unwrap();
+        assert!(e.contains("server mode"), "{e}");
         let _ = std::fs::remove_dir_all(&dir);
     }
 

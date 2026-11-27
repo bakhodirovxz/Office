@@ -38,6 +38,8 @@ pub enum SessErr {
     BadDocument(String),
     /// 502: the provider could not be reached or refused (the text never holds a URL)
     Upstream(String),
+    /// 507: the disk floor or the session's version cap (gate review L1): the error code and its text; nothing was stored
+    NoRoom(&'static str, String),
     /// 500; the text goes to stderr only
     Io(String),
 }
@@ -416,12 +418,46 @@ impl Docserver {
     ) -> Result<VersionRec, SessErr> {
         let _g = lock();
         let mut rec = self.open_session(sid)?;
+        self.room(&rec, bytes.len(), true)?;
         let stamped = self.stamped(&rec, bytes, saved);
         let bytes = stamped.as_deref().unwrap_or(bytes);
         let v = self.add_version(&mut rec, bytes, by, saved, now)?;
         self.store(&rec)?;
         crate::history::record(self, &rec, bytes, by);
         Ok(v)
+    }
+
+    /// Room for one more stored copy of `len` bytes (gate review L1): the version cap when `version`, and the free-space floor of
+    /// `data_dir`. A refusal stores nothing, so the session's versions stay as they were and the editor keeps the document dirty. The
+    /// close's promotion of the recovery copy is not checked: one per session, and refusing it would lose the last edits.
+    pub(crate) fn room(
+        &self,
+        rec: &SessionRecord,
+        len: usize,
+        version: bool,
+    ) -> Result<(), SessErr> {
+        if version && rec.versions.len() as u64 >= self.max_versions {
+            return Err(SessErr::NoRoom(
+                "version_limit",
+                format!(
+                    "this session already stores {} versions; close the document and open it again",
+                    self.max_versions
+                ),
+            ));
+        }
+        let need = (self.min_free_mb << 20).saturating_add(len as u64);
+        if self.min_free_mb > 0
+            && convert_api::app::free_space(&self.data_dir).is_some_and(|f| f < need)
+        {
+            eprintln!(
+                "docserver: disk.low: a write was refused, the data volume is under min_free_mb"
+            );
+            return Err(SessErr::NoRoom(
+                "disk_low",
+                "the server is low on disk space; nothing was saved, try again later".into(),
+            ));
+        }
+        Ok(())
     }
 
     /// The bytes with the editing person as creator (and, for a save, as last modifier), for an edit session only; `None` = unchanged.
@@ -473,6 +509,7 @@ impl Docserver {
     pub fn put_autosave(&self, sid: &str, bytes: &[u8], now: u64) -> Result<(), SessErr> {
         let _g = lock();
         let mut rec = self.open_session(sid)?;
+        self.room(&rec, bytes.len(), false)?;
         self.set_autosave(&mut rec, bytes, now)?;
         self.store(&rec)
     }
